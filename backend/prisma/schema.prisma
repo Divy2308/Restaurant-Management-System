@@ -1,0 +1,182 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Models ───────────────────────────────────────────
+
+model User {
+  id        Int       @id @default(autoincrement())
+  name      String
+  email     String    @unique
+  password  String
+  role      String    @default("cashier") // cashier|restaurant|kitchen|manager|customer
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  sessions  Session[]
+  orders    Order[]
+}
+
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  products  Product[]
+}
+
+model Product {
+  id          Int       @id @default(autoincrement())
+  name        String
+  price       Float
+  description String    @default("")
+  tax         Float     @default(0) // percentage
+  unit        String    @default("pcs") // pcs, ml, kg, etc
+  active      Boolean   @default(true)
+  categoryId  Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  category    Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  orderItems  OrderItem[]
+
+  @@index([categoryId])
+}
+
+model Floor {
+  id        Int       @id @default(autoincrement())
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  tables    Table[]
+}
+
+model Table {
+  id        Int       @id @default(autoincrement())
+  number    String
+  seats     Int       @default(4)
+  active    Boolean   @default(true)
+  status    String    @default("free") // free|occupied
+  floorId   Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  floor     Floor     @relation(fields: [floorId], references: [id], onDelete: Cascade)
+  orders    Order[]
+
+  @@index([floorId])
+}
+
+model PaymentMethod {
+  id        Int       @id @default(autoincrement())
+  name      String
+  type      String    // cash|digital|upi|razorpay
+  enabled   Boolean   @default(true)
+  upiId     String    @default("") // UPI ID for QR code
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Session {
+  id            Int       @id @default(autoincrement())
+  userId        Int
+  openedAt      DateTime  @default(now())
+  closedAt      DateTime?
+  status        String    @default("open") // open|closed
+  closingAmount Float     @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders        Order[]
+
+  @@index([userId])
+}
+
+model Order {
+  id                  Int       @id @default(autoincrement())
+  orderNumber         String    @unique // ORD-0001, ORD-0002, etc
+  tableId             Int?      // nullable for takeaway
+  sessionId           Int
+  userId              Int
+  status              String    @default("draft") // draft|sent|paid
+  paymentMethod       String    @default("")
+  total               Float     @default(0)
+  tip                 Float     @default(0)
+  createdAt           DateTime  @default(now())
+  sentToKitchenAt     DateTime? // when order sent to kitchen
+  startedAt           DateTime? // when kitchen starts preparing
+  completedAt         DateTime? // when order is ready
+  updatedAt           DateTime  @updatedAt
+
+  table               Table?    @relation(fields: [tableId], references: [id], onDelete: SetNull)
+  session             Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items               OrderItem[]
+  reviews             Review[]
+  kitchenTickets      KitchenTicket[]
+
+  @@index([tableId])
+  @@index([sessionId])
+  @@index([userId])
+  @@index([status])
+}
+
+model OrderItem {
+  id              Int       @id @default(autoincrement())
+  orderId         Int
+  productId       Int
+  productName     String    // denormalized: snapshot of product name when order created
+  qty             Int       @default(1)
+  price           Float     @default(0) // price per unit when ordered
+  kitchenStatus   String    @default("pending") // pending|to_cook|preparing|completed
+  startedAt       DateTime? // when item prep starts
+  completedAt     DateTime? // when item is ready
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  order           Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product         Product   @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model KitchenTicket {
+  id          Int       @id @default(autoincrement())
+  orderId     Int
+  status      String    @default("to_cook") // to_cook|preparing|completed
+  sentAt      DateTime  @default(now())
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([status])
+}
+
+model Review {
+  id        Int       @id @default(autoincrement())
+  orderId   Int
+  rating    Int       @default(5) // 1-5 stars
+  comment   String    @default("")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  order     Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+}
