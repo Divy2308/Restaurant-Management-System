@@ -1,153 +1,128 @@
 # Restaurant Management System
 
-A full-featured restaurant POS system with real-time kitchen display, customer display, and payment integration.
+Restaurant POS and kitchen flow app with a React + Vite frontend and an Express + Prisma backend.
+
+## Stack
+
+- Frontend: React, TypeScript, Vite, Socket.IO client
+- Backend: Express, TypeScript, Prisma, Socket.IO
+- Default database for local clone: SQLite
+- Future-ready database option: Supabase/PostgreSQL
 
 ## Project Structure
 
-```
-restaurant management system/
-├── frontend/                 # React + TypeScript + Vite
-│   ├── src/
-│   ├── package.json
-│   ├── vite.config.ts
-│   ├── tailwind.config.js
-│   ├── postcss.config.js
-│   └── .env.example
-│
-└── backend/                  # Express + TypeScript + Prisma
-    ├── src/
-    ├── prisma/
-    │   └── schema.prisma
-    ├── package.json
-    ├── tsconfig.json
-    ├── .env.example
-    └── .env
+```text
+Restaurant Management System/
+├── frontend/
+└── backend/
 ```
 
-## Frontend Setup
+## Fresh Clone Setup
 
-**Installed Dependencies:**
-- ✅ React 18 + TypeScript
-- ✅ Vite (dev server)
-- ✅ React Router v6
-- ✅ TanStack React Query (server state)
-- ✅ Zustand (UI state)
-- ✅ Socket.io client
-- ✅ Axios (HTTP client)
-- ✅ Tailwind CSS
+### 1. Install dependencies
 
-**To Start Development:**
+```bash
+cd frontend
+npm install
+
+cd ../backend
+npm install
+```
+
+### 2. Configure environment files
+
+```bash
+cd backend
+cp .env.example .env
+
+cd ../frontend
+cp .env.example .env
+```
+
+The backend `.env.example` uses local SQLite by default:
+
+```env
+DATABASE_URL="file:./dev.db"
+```
+
+That means a new clone can run locally without setting up Postgres or Supabase first.
+
+### 3. Initialize the backend database
+
+```bash
+cd backend
+npm run setup
+```
+
+This will:
+
+- generate the Prisma client
+- create/apply the existing migrations
+- create the local SQLite database file automatically
+
+### 4. Start the app
+
+Backend:
+
+```bash
+cd backend
+npm run dev
+```
+
+Frontend:
+
 ```bash
 cd frontend
 npm run dev
-# Server will run on http://localhost:5173
 ```
 
-**Available Scripts:**
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run linter (if configured)
+Open `http://localhost:5173`.
 
----
+## First Run in the UI
 
-## Backend Setup
+After the app opens:
 
-**Installed Dependencies:**
-- ✅ Express.js
-- ✅ TypeScript + ts-node
-- ✅ Prisma ORM (with @prisma/client)
-- ✅ Socket.io (real-time)
-- ✅ dotenv (environment variables)
-- ✅ cors (cross-origin)
-- ✅ bcryptjs (password hashing)
-- ✅ jsonwebtoken (JWT)
-- ✅ Nodemon (auto-restart on changes)
+1. Click `Setup Floor`
+2. Click `Seed Demo Menu`
 
-**To Start Development:**
+That gives you default tables and demo menu items immediately.
+
+## Switching to Supabase Later
+
+When you are ready to move off SQLite:
+
+1. Create a Supabase Postgres database
+2. Update `backend/.env`
+3. Replace `DATABASE_URL` with your Supabase connection string
+4. Run:
+
 ```bash
 cd backend
-
-# 1. Setup database
-# First configure DATABASE_URL in .env or .env.example
-
-# 2. Generate Prisma Client
 npm run prisma:generate
-
-# 3. Run migrations
-npm run prisma:migrate
-
-# 4. Start server
-npm run dev
-# Server will run on http://localhost:3001
+npm run prisma:deploy
 ```
 
-**Configuration:**
-1. Copy `.env.example` to `.env`
-2. Update values in `.env`:
-   - `DATABASE_URL` - Supabase PostgreSQL or local DB
-   - `JWT_SECRET` - Your secret key
-   - Razorpay keys (optional for now)
-   - Email service keys (optional for now)
+## Useful Scripts
 
-**Available Scripts:** (to be added)
-- `npm run dev` - Start with nodemon
-- `npm run build` - Compile TypeScript
-- `npm run start` - Run compiled app
-- `npm run prisma:generate` - Generate Prisma Client
-- `npm run prisma:migrate` - Run migrations
-- `npm run prisma:studio` - Open Prisma Studio
+Frontend:
 
----
+- `npm run dev`
+- `npm run build`
+- `npm run preview`
 
-## Next Steps
+Backend:
 
-1. **Configure Database**
-   - Set up Supabase project or local PostgreSQL
-   - Update `DATABASE_URL` in backend `.env`
-
-2. **Setup Backend Routes**
-   - Create folder structure: `src/routes/`, `src/models/`, `src/middleware/`
-   - Start with auth endpoints
-
-3. **Setup Frontend Pages**
-   - Create folder structure: `src/pages/`, `src/components/`, `src/hooks/`
-   - Start with Auth page
-
-4. **Real-time Integration**
-   - Setup Socket.io on backend
-   - Connect Socket.io client on frontend
-
-5. **Deploy**
-   - Frontend: Vercel
-   - Backend: Render, Railway, or Heroku
-
----
-
-## Development Workflow
-
-**Terminal 1 - Backend:**
-```bash
-cd backend
-npm run dev
-```
-
-**Terminal 2 - Frontend:**
-```bash
-cd frontend
-npm run dev
-```
-
-Both servers will run simultaneously with hot-reload enabled.
-
----
+- `npm run dev`
+- `npm run build`
+- `npm run start`
+- `npm run setup`
+- `npm run prisma:generate`
+- `npm run prisma:migrate`
+- `npm run prisma:deploy`
+- `npm run prisma:studio`
 
 ## Notes
 
-- All dependencies are installed and ready to use
-- TypeScript is configured in both frontend and backend
-- Tailwind CSS is configured for frontend
-- Prisma is initialized for backend (schema ready to be populated)
-- Environment variable templates are provided
-
-**Ready to build?** Start with Phase 1 migration steps! 🚀
+- `backend/.env` is intentionally not committed
+- local SQLite database files are ignored
+- Prisma migrations are committed so clones can create the same schema
